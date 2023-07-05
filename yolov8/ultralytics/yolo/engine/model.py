@@ -89,22 +89,26 @@ class YOLO:
         self.overrides = {}  # overrides for trainer object
         self.metrics = None  # validation/training metrics
         self.session = None  # HUB session
-        model = str(model).strip()  # strip spaces
 
-        # Check if Ultralytics HUB model from https://hub.ultralytics.com
-        if self.is_hub_model(model):
-            from ultralytics.hub.session import HUBTrainingSession
-            self.session = HUBTrainingSession(model)
-            model = self.session.model_file
-
-        # Load or create new YOLO model
-        suffix = Path(model).suffix
-        if not suffix and Path(model).stem in GITHUB_ASSET_STEMS:
-            model, suffix = Path(model).with_suffix('.pt'), '.pt'  # add suffix, i.e. yolov8n -> yolov8n.pt
-        if suffix == '.yaml':
-            self._new(model, task)
+        if isinstance(model, list):
+            self.model = model
         else:
-            self._load(model, task)
+            model = str(model).strip()  # strip spaces
+
+            # Check if Ultralytics HUB model from https://hub.ultralytics.com
+            if self.is_hub_model(model):
+                from ultralytics.hub.session import HUBTrainingSession
+                self.session = HUBTrainingSession(model)
+                model = self.session.model_file
+
+            # Load or create new YOLO model
+            suffix = Path(model).suffix
+            if not suffix and Path(model).stem in GITHUB_ASSET_STEMS:
+                model, suffix = Path(model).with_suffix('.pt'), '.pt'  # add suffix, i.e. yolov8n -> yolov8n.pt
+            if suffix == '.yaml':
+                self._new(model, task)
+            else:
+                self._load(model, task)
 
     def __call__(self, source=None, stream=False, **kwargs):
         """Calls the 'predict' function with given arguments to perform object detection."""

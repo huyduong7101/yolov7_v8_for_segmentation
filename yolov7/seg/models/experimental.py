@@ -63,11 +63,17 @@ class Ensemble(nn.ModuleList):
         super().__init__()
 
     def forward(self, x, augment=False, profile=False, visualize=False):
-        y = [module(x, augment, profile, visualize)[0] for module in self]
+        # y = [module(x, augment, profile, visualize)[0] for module in self]
+        for mi, module in enumerate(self):
+            if mi == 0:
+                y, proto = module(x, augment, profile, visualize)
+                y = [y]
+            else:
+                y.append(module(x, augment, profile, visualize)[0])
         # y = torch.stack(y).max(0)[0]  # max ensemble
         # y = torch.stack(y).mean(0)  # mean ensemble
         y = torch.cat(y, 1)  # nms ensemble
-        return y, None  # inference, train output
+        return y, proto  # inference, train output
 
 
 def attempt_load(weights, device=None, inplace=True, fuse=True):
