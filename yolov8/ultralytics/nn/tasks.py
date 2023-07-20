@@ -488,11 +488,17 @@ class Ensemble(nn.ModuleList):
 
     def forward(self, x, augment=False, profile=False, visualize=False):
         """Function generates the YOLOv5 network's final layer."""
-        y = [module(x, augment, profile, visualize)[0] for module in self]
+        # y = [module(x, augment, profile, visualize)[0] for module in self]
+        for mi, module in enumerate(self):
+            if mi == 0:
+                y, proto = module(x, augment, profile, visualize)
+                y = [y]
+            else:
+                y.append(module(x, augment, profile, visualize)[0])
         # y = torch.stack(y).max(0)[0]  # max ensemble
         # y = torch.stack(y).mean(0)  # mean ensemble
         y = torch.cat(y, 2)  # nms ensemble, y shape(B, HW, C)
-        return y, None  # inference, train output
+        return y, proto  # inference, train output
 
 
 # Functions ------------------------------------------------------------------------------------------------------------
